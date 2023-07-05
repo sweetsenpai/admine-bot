@@ -28,6 +28,7 @@ def words_insert():
         session.commit()
     return
 
+
 db_path = 'C:/Users/workc/PycharmProjects/admin/admine_bot/DB/admin_bot.db'
 
 if os.path.exists(db_path) is False:
