@@ -19,25 +19,32 @@ async def text_massage_report(update: Update, context: ContextTypes.DEFAULT_TYPE
     user_card = collection.find_one({'user': user})
 
     if user_card:
-        if user_card.get('text') < 2:
-            collection.update_one(filter={'user': user}, update={'$inc': {'text': 1}, '$set': {'text_date': datetime.now().isoformat()}})
+        delta_time = datetime.now() - user_card.get('text_date')
+        if delta_time.days < 1:
+            if user_card.get('text') < 2:
+                collection.update_one(filter={'user': user}, update={'$inc': {'text': 1},
+                                                                     '$set': {'text_date': datetime.now()}})
+            else:
+                await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+                await update.effective_message.reply_text(text='{} получил бан на сутки за '
+                                                               'нецензурную речь.'.format(user_card.get('user')))
+                await context.bot.banChatMember(chat_id=update.effective_message.chat_id,
+                                                user_id=update.effective_message.from_user.id,
+                                                until_date=1)
+                return
         else:
-            await update.effective_message.reply_text(text='{} получил бан на сутки за '
-                                                           'нецензурную речь.'.format(user_card.get('user')))
-            await context.bot.banChatMember(chat_id=update.effective_message.chat_id,
-                                            user_id=update.effective_message.from_user.id,
-                                            until_date=1)
-            return
+            collection.update_one(filter={'user': user},
+                                  update={'$set': {'text': 1,
+                                                   'text_date': datetime.now()}})
+
     else:
-        collection.insert_one({'user': user, 'text': 1, 'text_date': datetime.now().isoformat()})
+        collection.insert_one({'user': user, 'text': 1, 'text_date': datetime.now()})
     user_card = collection.find_one({'user': user})
 
     await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
     await update.effective_message.reply_text(text='{} вынесено {} предупреждений за нецензурную речь,'
                                                    ' третье будет последним!'.format(user_card.get('user'), user_card.get('text')))
     return
-
-
 
 
 
