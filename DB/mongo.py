@@ -1,5 +1,5 @@
 import pymongo
-from datetime import datetime
+from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -26,11 +26,12 @@ async def text_massage_report(update: Update, context: ContextTypes.DEFAULT_TYPE
                                                                      '$set': {'text_date': datetime.now()}})
             else:
                 await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
-                await update.effective_message.reply_text(text='{} получил бан на сутки за '
+                await context.bot.send_message(chat_id=chat_id, text='{} получил бан на сутки за '
                                                                'нецензурную речь.'.format(user_card.get('user')))
                 await context.bot.banChatMember(chat_id=update.effective_message.chat_id,
                                                 user_id=update.effective_message.from_user.id,
-                                                until_date=1)
+                                                until_date=datetime.now() + timedelta(minutes=1.5),
+                                                revoke_messages=True)
                 return
         else:
             collection.update_one(filter={'user': user},
@@ -42,7 +43,7 @@ async def text_massage_report(update: Update, context: ContextTypes.DEFAULT_TYPE
     user_card = collection.find_one({'user': user})
 
     await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
-    await update.effective_message.reply_text(text='{} вынесено {} предупреждений за нецензурную речь,'
+    await context.bot.send_message(chat_id=chat_id, text='{} вынесено {} предупреждений за нецензурную речь,'
                                                    ' третье будет последним!'.format(user_card.get('user'), user_card.get('text')))
     return
 
