@@ -95,3 +95,22 @@ async def sticker_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return
 
+
+async def flood_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # TODO: flood
+    return
+
+
+async def photo_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # TODO: flood
+    return
+
+
+async def video_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # TODO: video
+    return
+
+
+async def document_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # TODO: document
+    return
