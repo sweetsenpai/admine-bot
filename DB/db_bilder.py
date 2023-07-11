@@ -17,8 +17,8 @@ class Words(Base):
     def __repr__(self):
         return f'{self.word_id} : {self.word_id}'
 
-class Rules(Base):
-# TODO: Rules
+
+
 
 def words_insert():
     f = open('C:/Users/workc/PycharmProjects/admin/admine_bot/DB/bad_words.txt', 'r')

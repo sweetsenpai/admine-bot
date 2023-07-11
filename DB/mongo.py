@@ -1,4 +1,4 @@
-import pymongo
+import pymongo.errors
 from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -97,7 +97,41 @@ async def sticker_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def flood_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # TODO: flood
+    user = update.effective_message.from_user.name
+    chat_id = update.effective_message.chat_id
+    message_id = update.effective_message.message_id
+
+    user_card = collection.find_one({'user': user})
+
+    if user_card:
+        if 'flood_date' in user_card.keys():
+            delta_time = datetime.now() - user_card.get('flood_date')
+            if delta_time.seconds / 3600 < 1:
+                if user_card.get('flood') <= 9:
+                    collection.update_one(filter={'user': user}, update={'$inc': {'flood': 1},
+                                                                         '$set': {'flood_date': datetime.now()}})
+                else:
+                    await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+                    await context.bot.send_message(chat_id=chat_id, text='{} получил бан на сутки за флуд'.format(user_card.get('user')))
+                    await context.bot.banChatMember(chat_id=update.effective_message.chat_id,
+                                                    user_id=update.effective_message.from_user.id,
+                                                    until_date=datetime.now() + timedelta(days=1),
+                                                    revoke_messages=True)
+                    return
+            else:
+                collection.update_one(filter={'user': user},
+                                      update={'$set': {'flood': 1,
+                                                       'flood_date': datetime.now()}})
+        else:
+            collection.update_one(filter={'user': user}, update={'$set': {'flood': 1, 'flood_date': datetime.now()}})
+
+    else:
+        collection.update_one(filter={'user': user}, update={'$set': {'flood': 1, 'flood_date': datetime.now()}})
+
+    user_card = collection.find_one({'user': user})
+    if user_card.get('flood') >= 8:
+        await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+        await context.bot.send_message(chat_id=chat_id, text='{} вынесено  предупреждений за флуд.\nОграничение на 100 сообщений в час, ты отправил {}'.format(user_card.get('user'), user_card.get('flood')))
     return
 
 
