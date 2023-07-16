@@ -15,7 +15,26 @@ class Words(Base):
         self.word = word
 
     def __repr__(self):
-        return f'{self.word_id} : {self.word_id}'
+        return f'{self.word_id} : {self.word}'
+
+
+class Rules(Base):
+    __tablename__ = 'rules'
+    rule_id = sql.Column(name='rule_id', type_=sql.Integer, primary_key=True)
+    bad_word = sql.Column(name='bad_word', type_=sql.Integer)
+    sticker = sql.Column(name='sticker', type_=sql.Integer)
+    flood = sql.Column(name='flood', type_=sql.Integer)
+    img = sql.Column(name='img', type_=sql.Integer)
+
+    def __int__(self, rule_id, bad_word, sticker, flood, img):
+        self.rule_id = rule_id
+        self.bad_word = bad_word
+        self.sticker = sticker
+        self.flood = flood
+        self.img = img
+
+    def __repr__(self):
+        return f'{self.rule_id}, {self.bad_word}, {self.sticker}, {self.flood}, {self.img}'
 
 
 def words_insert():
