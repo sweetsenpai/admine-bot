@@ -36,12 +36,12 @@ async def text_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     return
             else:
                 collection.update_one(filter={'user': user},
-                                      update={'$set': {'sticker': 1,
-                                                       'sticker_date': datetime.now()}})
+                                      update={'$set': {'text': 1,
+                                                       'text_date': datetime.now()}})
         else:
             collection.update_one(filter={'user': user},
-                                  update={'$set': {'sticker': 1,
-                                                   'sticker_date': datetime.now()}})
+                                  update={'$set': {'text': 1,
+                                                   'text_date': datetime.now()}})
 
     else:
         collection.insert_one({'user': user, 'text': 1, 'text_date': datetime.now()})
@@ -85,7 +85,7 @@ async def sticker_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                   update={'$set': {'sticker': 1,
                                                    'sticker_date': datetime.now()}})
     else:
-        collection.insert_one({'user': user, 'text': 1, 'text_date': datetime.now()})
+        collection.insert_one({'user': user, 'sticker': 1, 'sticker_date': datetime.now()})
     user_card = collection.find_one({'user': user})
     if user_card.get('sticker') >= 7:
         warnings_left = 10 - user_card.get('sticker')
@@ -102,7 +102,6 @@ async def flood_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_id = update.effective_message.message_id
 
     user_card = collection.find_one({'user': user})
-
     if user_card:
         if 'flood_date' in user_card.keys():
             delta_time = datetime.now() - user_card.get('flood_date')
@@ -126,7 +125,7 @@ async def flood_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
             collection.update_one(filter={'user': user}, update={'$set': {'flood': 1, 'flood_date': datetime.now()}})
 
     else:
-        collection.update_one(filter={'user': user}, update={'$set': {'flood': 1, 'flood_date': datetime.now()}})
+        collection.insert_one({'user': user, 'flood': 1, 'flood_date': datetime.now()})
 
     user_card = collection.find_one({'user': user})
     if user_card.get('flood') >= 8:
@@ -135,16 +134,49 @@ async def flood_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return
 
 
-async def photo_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # TODO: flood
+async def img_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_message.from_user.name
+    chat_id = update.effective_message.chat_id
+    message_id = update.effective_message.message_id
+
+    user_card = collection.find_one({'user': user})
+
+    if user_card:
+        if 'img_date' in user_card.keys():
+            delta_time = datetime.now() - user_card.get('img_date')
+            if delta_time.seconds / 3600 < 1:
+                if user_card.get('img') <= 9:
+                    collection.update_one(filter={'user': user}, update={'$inc': {'img': 1},
+                                                                         '$set': {'img_date': datetime.now()}})
+                else:
+                    await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+                    await context.bot.send_message(chat_id=chat_id,
+                                                   text='{} получил бан на сутки за флуд картинками'.format(user_card.get('user')))
+                    await context.bot.banChatMember(chat_id=update.effective_message.chat_id,
+                                                    user_id=update.effective_message.from_user.id,
+                                                    until_date=datetime.now() + timedelta(days=1),
+                                                    revoke_messages=True)
+                    return
+            else:
+                collection.update_one(filter={'user': user},
+                                      update={'$inc': {'img': 1},
+                                              '$set': {'img_date': datetime.now()}})
+        else:
+            collection.update_one(filter={'user': user}, update={'$set': {'img': 1, 'img_date': datetime.now()}})
+
+    else:
+        collection.insert_one({'user': user, 'img': 1, 'img_date': datetime.now()})
+
+    user_card = collection.find_one({'user': user})
+    if user_card.get('img') >= 8:
+        await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+        await context.bot.send_message(chat_id=chat_id,
+                                       text='{} вынесено  предупреждений за флуд.\nОграничение на 10 картинок в час, ты отправил {}'.format(
+                                           user_card.get('user'), user_card.get('img')))
     return
 
 
-async def video_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # TODO: video
-    return
 
 
-async def document_report_db(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # TODO: document
-    return
+
+

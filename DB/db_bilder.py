@@ -18,8 +18,6 @@ class Words(Base):
         return f'{self.word_id} : {self.word_id}'
 
 
-
-
 def words_insert():
     f = open('C:/Users/workc/PycharmProjects/admin/admine_bot/DB/bad_words.txt', 'r')
     text = f.read()
